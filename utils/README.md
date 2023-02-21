@@ -1,1 +1,0 @@
-This fold includes many common tools, such thread pool, memory pool and so on.
