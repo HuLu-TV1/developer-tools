@@ -3,4 +3,9 @@
 #include <arpa/inet.h>
 #include "noncopyable.h"
 const struct sockaddr *sockaddr_cast(const struct sockaddr_in *addr);
+template <typename To, typename From>
+inline To implicit_cast(From const &f) {
+  return f;
+}
+int get_socket_error(int sockfd);
 #endif

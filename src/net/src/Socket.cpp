@@ -1,13 +1,11 @@
-
-
-#include "Socket.h"
+#include "socket.h"
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <unistd.h>
 #include <cstring>
-#include "InetAddress.h"
-
+#include "inet_address.h"
+using namespace net;
 Socket::Socket() {}
 Socket::~Socket() { close(socket_fd); }
 int Socket::CreateSocket(sa_family_t family) {
@@ -15,16 +13,17 @@ int Socket::CreateSocket(sa_family_t family) {
   return socket_fd;
 }
 Socket::Socket(int fd) { socket_fd = fd; }
-int Socket::GetSocketFd() { return socket_fd; }
+int Socket::get_socket_fd() { return socket_fd; }
 
-void Socket::SetReuserAddr(int fd) {
+void Socket::set_reuser_addr(int fd) {
   int opt = 1;
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 }
 
-void Socket::SetNonBlocking(int fd) { fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK); }
+void Socket::set_nonblocking(int fd) { fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK); }
+
 void Socket::Bind(int fd, const InetAddress &inetaddress) {
-  if (bind(fd, inetaddress.getSockAddrconst(), sizeof(inetaddress)) == -1) {
+  if (bind(fd, inetaddress.get_sock_addr(), sizeof(inetaddress)) == -1) {
     printf("bind socket error: %s(errno: %d)\n", strerror(errno), errno);
   }
 }
@@ -42,3 +41,11 @@ int Socket::Accept(int fd /*,InetAddress & clientaddr*/) {
   int clnt_fd = accept(fd, (struct sockaddr *)NULL, NULL);
   return clnt_fd;
 }
+
+// void Socket::connect(const InetAddress &inetaddress){
+//     struct sockaddr_in addr = inetaddress.getAddr();
+//     socklen_t addr_len = inetaddress.getAddr_len();
+//     if (::connect(fd, (sockaddr*)&addr, addr_len) == -1) {
+//     printf("socket connect error: %s(errno: %d)\n", strerror(errno), errno);
+//   }
+// }

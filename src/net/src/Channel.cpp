@@ -1,28 +1,31 @@
-#include "Channel.h"
+#include "channel.h"
 #include <iostream>
-#include "EventLoop.h"
+#include "event_loop.h"
+
+using namespace net;
 using std::cout;
 using std::endl;
-Channel::Channel(EventLoop *evloop, int fd) : _evloop(evloop), _fd(fd) {}
 
-void Channel::enableReading() {
-  events = EPOLLIN | EPOLLET;
-  _evloop->updateChannel(this);
+Channel::Channel(EventLoop *ev_loop, int fd) : evloop_(ev_loop), fd_(fd) {}
+
+void Channel::EnableReading() {
+  events_ = EPOLLIN | EPOLLET;
+  evloop_->UpdateChannel(this);
 }
 
-void Channel::setInEpoll() { inEpoll = true; }
+void Channel::set_in_epoll() { inEpoll_ = true; }
 
-bool Channel::getInEpoll() { return inEpoll; }
+bool Channel::get_in_epoll() { return inEpoll_; }
 
-int Channel::getEvents() { return events; }
-int Channel::getRevents() { return revents; }
+int Channel::get_events() { return events_; }
+int Channel::get_revents() { return revents_; }
 
-void Channel::setRevents(int event) {
+void Channel::set_revents(int event) {
   std::cout << "setRevents" << std::endl;
-  revents = event;
+  revents_ = event;
 }
 
-int Channel::getFd() { return _fd; }
+int Channel::get_fd() { return fd_; }
 
-void Channel::handleEvent() { handleEventcb(); }
-void Channel::setHandleEvent(handleEventCallback cb) { handleEventcb = cb; }
+void Channel::HandleEvent() { evloop_->AddThreadPool(handle_event_cb_); }
+void Channel::set_handle_event(HandleEventCallback cb) { handle_event_cb_ = cb; }
