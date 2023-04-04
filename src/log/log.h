@@ -3,6 +3,8 @@
 
 namespace CommonLog {
 
+const int PATH_MAX = 255;
+
 enum class LogType {
     LOG_FILE,
     LOG_PRINT,
