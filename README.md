@@ -3,7 +3,20 @@
 
 本仓库包含项目开发中，经常使用的一些基础的工具，如日志、线程池、内存池、通信库等。
 
-### commit 格式
+### 配置 gitcommit_template
+
+`gitcommit_template`放到仓库根目录下（本仓库中已有），配置命令：
+
+```shell
+# 设置全局提交模板
+git config --global commit.template gitcommit_template
+# 设置文本编辑器
+git config --global core.editor vim
+```
+
+每次提交时输入`git commit`会自动弹出模板，然后在模板中编辑即可。#注释部分不会展现在提交的 `commit` 中。
+
+### commit 模板
 
 ```shell
 <type>(<scope>): <subject>
@@ -24,7 +37,7 @@ type指明git commit的类别，应该使用以下类型，也可根据团队自
 - fix: 修复 bug
 - doc: 仅仅修改了文档，比如 README, CHANGELOG等等
 - test: 增加/修改测试用例，包括单元测试、集成测试等
-- style: 修改了空行、缩进格式、引用包排序等等（不改变代码逻辑）
+- style: 修改了空行、缩进格式、引用包排序（不改变代码逻辑）、文件夹变更、文件名变更等
 - perf: 优化相关内容，比如提升性能、体验、算法等
 - refactor: 代码重构，「没有新功能或者bug修复」
 - chore: 改变构建流程、或者增加依赖库、工具等

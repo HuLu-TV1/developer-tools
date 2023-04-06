@@ -45,3 +45,6 @@ SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
 add_executable(log_stdout_test ${SRC} ${INC})
 target_link_libraries(log_stdout_test pthread)
+
+add_executable(easy_log_test test_easy_log.cpp)
+target_link_libraries(easy_log_test pthread)
