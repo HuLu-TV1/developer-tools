@@ -18,7 +18,7 @@ void log_async_test() {
 }
 
 int main() {
-    CommonLog::Logger::GetInstance()->Init(CommonLog::LogType::LOG_FILE, 1);
+    CommonLog::Logger::GetInstance()->Init();
     std::vector<std::thread> threads;
     printf("sync log test started\n");
     printf("start to log\n");
