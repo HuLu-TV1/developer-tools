@@ -12,7 +12,9 @@ public:
     BufferQueue(): array_(new std::vector<T>[capacity_]()) {}
     explicit BufferQueue(int max_size) {
             if (max_size <= 0) throw std::invalid_argument("max_size is illegal!");
-            array_ = new std::vector<T>[capacity_]();
+            capacity_ = max_size;
+            array_ = new std::vector<T>();
+            array_->reserve(capacity_);
         }
     BufferQueue(const BufferQueue& other) {
         std::lock_guard<std::mutex> lock(mutex_);

@@ -1,9 +1,14 @@
 #pragma once
 #include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <atomic>
+#include <cstdarg>
+#include <cstring>
+#include "log_queue.h"
 
 namespace CommonLog {
-
-const int PATH_MAX = 255;
 
 enum class LogType {
     LOG_FILE,
@@ -18,72 +23,93 @@ enum LogLevel {
     LOG_NUM,
 };
 
-const char *KLogLevelName[LogLevel::LOG_NUM] = {
-    "[ERROR]",
-    "[WARN ]",
-    "[INFO ]",
-    "[DEBUG]",
-};
-
 class Logger {
 public:
-    static std::shared_ptr<Logger> GetSharedInstance();
-    Logger() = default;
-    Logger(const Logger&) = default;
-    Logger& operator=(const Logger&) = default;
-    virtual ~Logger() {}
+    static Logger* GetInstance();
+    ~Logger();
+    bool IsInited() {
+        return is_inited_;
+    }
+    bool Init(LogType type=LogType::LOG_FILE, int buffer_queue_size=0, 
+                int buffer_size=8192, int split_lines=5000);
+    void AsyncFlush() {
+        this->AsyncWrite();
+    }
 
-    virtual bool IsInited() = 0;
-    virtual bool Init(LogType type, int buffer_queue_size, 
-                int buffer_size, int split_lines) = 0;  
-    virtual void AsyncFlush() = 0;
-    virtual void WriteLog(const char* file_name, const char* callback_name, int line_no, LogLevel level, const char* format, ...) = 0;
-    virtual void Flush() = 0;
+    void WriteLog(const char* file_name, const char* callback_name, int line_no, LogLevel level, const char* format, ...);
+    void Flush();
+private:
+    Logger() = default;
+
+private:
+    void AsyncWrite() {
+        std::string single_line;
+        while (buffer_queue_->Pop(single_line) && !is_thread_stop_) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            fputs(single_line.c_str(), fp_);
+        }
+    }
+    
+private:
+    std::string file_name_;
+    std::string file_dir_;
+    int split_lines_ = 0;
+    int buf_size_ = 0;
+    long long count_ = 0;
+    FILE* fp_;
+    char* buf_ = nullptr;
+    bool is_inited_ = false;
+    BufferQueue<std::string> *buffer_queue_ = nullptr;
+    bool is_async_ = false;
+    std::atomic<bool> is_thread_stop_{false};
+    std::mutex mutex_;
+    std::thread *async_thread_;
 };
+
 
 }
 
 #define LOG_DEBUG(format, ...) \
     do {                       \
-        if (!CommonLog::Logger::GetSharedInstance()->IsInited())   \
+        if (!CommonLog::Logger::GetInstance()->IsInited())   \
             std::cout << "logger must be inited before use!" << std::endl; \
         else \
         {                                                     \
-            CommonLog::Logger::GetSharedInstance()->WriteLog(__FILE__, __FUNCTION__, __LINE__, LogLevel::LOG_DEBUG, format, ##__VA_ARGS__); \
-            CommonLog::Logger::GetSharedInstance()->Flush();                    \
+            CommonLog::Logger::GetInstance()->WriteLog(__FILE__, __FUNCTION__, __LINE__, CommonLog::LogLevel::LOG_DEBUG, format, ##__VA_ARGS__); \
+            CommonLog::Logger::GetInstance()->Flush();                    \
         }                                                                       \
     } while(0)
     
 
 #define LOG_INFO(format, ...) \
     do {                       \
-        if (!CommonLog::Logger::GetSharedInstance()->IsInited())   \
+        if (!CommonLog::Logger::GetInstance()->IsInited())   \
             std::cout << "logger must be inited before use!" << std::endl; \
         else \
         {                                                     \
-            CommonLog::Logger::GetSharedInstance()->WriteLog(__FILE__, __FUNCTION__, __LINE__, LogLevel::LOG_INFO, format, ##__VA_ARGS__); \
-            CommonLog::Logger::GetSharedInstance()->Flush();                    \
+            CommonLog::Logger::GetInstance()->WriteLog(__FILE__, __FUNCTION__, __LINE__, CommonLog::LogLevel::LOG_INFO, format, ##__VA_ARGS__); \
+            CommonLog::Logger::GetInstance()->Flush();                    \
         }                                                                       \
     } while(0)
 
 #define LOG_WARN(format, ...) \
     do {                      \
-        if (!CommonLog::Logger::GetSharedInstance()->IsInited())   \
+        if (!CommonLog::Logger::GetInstance()->IsInited())   \
             std::cout << "logger must be inited before use!" << std::endl; \
         else \
         {                                                     \
-            CommonLog::Logger::GetSharedInstance()->WriteLog(__FILE__, __FUNCTION__, __LINE__, LogLevel::LOG_WARN, format, ##__VA_ARGS__); \
-            CommonLog::Logger::GetSharedInstance()->Flush();                    \
+            CommonLog::Logger::GetInstance()->WriteLog(__FILE__, __FUNCTION__, __LINE__, CommonLog::LogLevel::LOG_WARN, format, ##__VA_ARGS__); \
+            CommonLog::Logger::GetInstance()->Flush();                    \
         }                                                                       \
     } while(0)
 
 #define LOG_ERROR(format, ...) \
     do {                       \
-        if (!CommonLog::Logger::GetSharedInstance()->IsInited())   \
+        if (!CommonLog::Logger::GetInstance()->IsInited())   \
             std::cout << "logger must be inited before use!" << std::endl; \
         else \
         {                                                     \
-            CommonLog::Logger::GetSharedInstance()->WriteLog(__FILE__, __FUNCTION__, __LINE__, LogLevel::LOG_ERROR, format, ##__VA_ARGS__); \
-            CommonLog::Logger::GetSharedInstance()->Flush();                    \
+            CommonLog::Logger::GetInstance()->WriteLog(__FILE__, __FUNCTION__, __LINE__, CommonLog::LogLevel::LOG_ERROR, format, ##__VA_ARGS__); \
+            CommonLog::Logger::GetInstance()->Flush();                    \
         }                                                                       \
     } while(0)

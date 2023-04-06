@@ -3,9 +3,18 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
-#include "log_impl.h"
+#include "log.h"
 
 using namespace CommonLog;
+
+const int PATH_MAX = 255;
+
+const char *KLogLevelName[LogLevel::LOG_NUM] = {
+    "[ERROR]",
+    "[WARN]",
+    "[INFO]",
+    "[DEBUG]",
+};
 
 std::string GetLogPath() {
     char path[PATH_MAX]{0};
@@ -36,7 +45,12 @@ std::string GetCurrentTime() {
     return ss.str();
 }
 
-LoggerImpl::~LoggerImpl(){
+Logger* Logger::GetInstance() {
+    static Logger log;
+    return &log;
+}
+
+Logger::~Logger(){
     if (async_thread_) {
         is_thread_stop_ = true;
         if (async_thread_->joinable()) {
@@ -59,7 +73,7 @@ LoggerImpl::~LoggerImpl(){
     }
 }
 
-bool LoggerImpl::Init(LogType type, int buffer_queue_size, 
+bool Logger::Init(LogType type, int buffer_queue_size, 
                 int buffer_size, int split_lines) {
     if (is_inited_) {
         std::cout << "Logger has been initialized, do not try again!" << std::endl;
@@ -69,7 +83,7 @@ bool LoggerImpl::Init(LogType type, int buffer_queue_size,
     if (buffer_size >= 1) {
         buffer_queue_ = new BufferQueue<std::string>(buffer_size);
         is_async_ = true;
-        async_thread_ = new std::thread(&LoggerImpl::AsyncFlush, this);
+        async_thread_ = new std::thread(&Logger::AsyncFlush, this);
     }
 
     buf_size_ = buffer_size;
@@ -79,6 +93,7 @@ bool LoggerImpl::Init(LogType type, int buffer_queue_size,
 
     if (type == LogType::LOG_PRINT) {
         fp_ = stdout;
+        is_inited_ = true;
         return true;
     }
     file_dir_ = GetLogPath();
@@ -94,7 +109,7 @@ bool LoggerImpl::Init(LogType type, int buffer_queue_size,
     return true;
 }
 
-void LoggerImpl::WriteLog(const char* file_name, const char* callback_name, int line_no, LogLevel level, const char* format, ...) {
+void Logger::WriteLog(const char* file_name, const char* callback_name, int line_no, LogLevel level, const char* format, ...) {
     {
         std::lock_guard<std::mutex> lock(mutex_);
         count_++;
@@ -105,36 +120,31 @@ void LoggerImpl::WriteLog(const char* file_name, const char* callback_name, int 
             std::string new_file = file_dir_ + "/" + GetLogName();
             fp_ = fopen(new_file.c_str(), "a");
         }
-
-        va_list valist;
-        va_start(valist, format);
-        std::string log_str;
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            std::string current_time = GetCurrentTime();
-            int n = snprintf(buf_, 300, "%s %s [%s:%s:%d] ", current_time.c_str(), KLogLevelName[level],
-                        file_name, callback_name, line_no);
-            int m = vsnprintf(buf_+n, buf_size_-1, format, valist);
-            buf_[n+m] = '\n';
-            buf_[m+m+1] = '\0';
-            log_str = buf_;
-        }
-        va_end(valist);
-        if (is_async_) {
-            while (!buffer_queue_->Push(log_str) && !is_thread_stop_) {}
-        }
-        else {
-            std::lock_guard<std::mutex> lock(mutex_);
-            fputs(log_str.c_str(), fp_);
-        }
+    }
+    va_list valist;
+    va_start(valist, format);
+    std::string log_str;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::string current_time = GetCurrentTime();
+        int n = snprintf(buf_, 300, "%s %s [%s:%s:%d] ", current_time.c_str(), KLogLevelName[level],
+                    file_name, callback_name, line_no);
+        int m = vsnprintf(buf_+n, buf_size_-1, format, valist);
+        // buf_[n+m] = '\n';
+        buf_[n+m+1] = '\0';
+        log_str = buf_;
+    }
+    va_end(valist);
+    if (is_async_) {
+        while (!buffer_queue_->Push(log_str) && !is_thread_stop_) {}
+    }
+    else {
+        std::lock_guard<std::mutex> lock(mutex_);
+        fputs(log_str.c_str(), fp_);
     }
 }
 
-void LoggerImpl::Flush() {
+void Logger::Flush() {
     std::lock_guard<std::mutex> lock(mutex_);
     fflush(fp_);
-}
-
-std::shared_ptr<Logger> Logger::GetSharedInstance() {
-    return std::shared_ptr<Logger>(new LoggerImpl());
 }
