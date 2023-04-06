@@ -18,23 +18,27 @@ public:
         }
     BufferQueue(const BufferQueue& other) {
         std::lock_guard<std::mutex> lock(mutex_);
-        array_ = other.array_;
         first_ = other.first_;
         last_ = other.last_;
         size_ = other.size_;
         capacity_ = other.capacity_;
+        array_ = new std::vector<T>();
+        array_->reserve(capacity_);
+        std::copy(other.array_->begin(), other.array_->end(), array_->begin());
     } 
 
     BufferQueue& operator=(const BufferQueue& other) {
         std::lock_guard<std::mutex> lock(mutex_);
-        std::vector<T> *tmp = array_;
-        std::copy(other.array_->begin(), other.array_->end(), array_->begin());
-        delete tmp;
-        tmp = nullptr;
         first_ = other.first_;
         last_ = other.last_;
         size_ = other.size_;
         capacity_ = other.capacity_;
+        std::vector<T> *tmp = array_;
+        array_ = new std::vector<T>();
+        array_->reserve(capacity_);
+        std::copy(other.array_->begin(), other.array_->end(), array_->begin());
+        delete tmp;
+        tmp = nullptr;
     }
 
     ~BufferQueue() {

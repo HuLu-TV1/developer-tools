@@ -57,6 +57,7 @@ Logger::~Logger(){
             buffer_queue_->notify();
             async_thread_->join();
         }
+        delete async_thread_;
     }
 
     std::lock_guard<std::mutex> lock(mutex_);
@@ -80,8 +81,8 @@ bool Logger::Init(LogType type, int buffer_queue_size,
         return false;
     }
 
-    if (buffer_size >= 1) {
-        buffer_queue_ = new BufferQueue<std::string>(buffer_size);
+    if (buffer_queue_size >= 1) {
+        buffer_queue_ = new BufferQueue<std::string>(buffer_queue_size);
         is_async_ = true;
         async_thread_ = new std::thread(&Logger::AsyncFlush, this);
     }
@@ -94,6 +95,7 @@ bool Logger::Init(LogType type, int buffer_queue_size,
     if (type == LogType::LOG_PRINT) {
         fp_ = stdout;
         is_inited_ = true;
+        is_std_ = true;
         return true;
     }
     file_dir_ = GetLogPath();
@@ -113,7 +115,7 @@ void Logger::WriteLog(const char* file_name, const char* callback_name, int line
     {
         std::lock_guard<std::mutex> lock(mutex_);
         count_++;
-        if (count_ % split_lines_ == 0) {
+        if (count_ % split_lines_ == 0 && !is_std_) {
             std::cout << "start to create a new log file\n" <<std::endl;
             fflush(fp_);
             fclose(fp_);

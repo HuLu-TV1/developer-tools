@@ -30,6 +30,7 @@ public:
     bool IsInited() {
         return is_inited_;
     }
+    //If the type is LOG_PRINT, the paramter split_lines is valid.
     bool Init(LogType type=LogType::LOG_FILE, int buffer_queue_size=0, 
                 int buffer_size=8192, int split_lines=5000);
     void AsyncFlush() {
@@ -61,6 +62,7 @@ private:
     bool is_inited_ = false;
     BufferQueue<std::string> *buffer_queue_ = nullptr;
     bool is_async_ = false;
+    bool is_std_ = false;
     std::atomic<bool> is_thread_stop_{false};
     std::mutex mutex_;
     std::thread *async_thread_;
