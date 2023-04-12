@@ -2,22 +2,25 @@
 #define __ACCEPTOR__
 #include <functional>
 #include "noncopyable.h"
+namespace net {
 class Socket;
 class EventLoop;
 class InetAddress;
 class Channel;
 class Acceptor : noncopyable {
  private:
-  EventLoop *_eventloop;
-  typedef std::function<void(Socket *)> NewConnectCallback;
-  NewConnectCallback newConnectCallback;
-  Socket *socket;
-  Channel *accp_channel;
-  int socket_fd;
-  void acceptConnection();
+  EventLoop *eventloop_;
+  using NewConnectCallback = std::function<void(Socket *)>;
+  NewConnectCallback new_connect_callback_;
+  Socket *socket_;
+  Channel *accept_channel_;
+  int socket_fd_;
+  void AcceptConnection();
+
  public:
-  Acceptor(EventLoop *eventloop, const InetAddress &listenAddr);
+  Acceptor(EventLoop *event_loop, const InetAddress &listen_addr);
   ~Acceptor();
-  void setNewConnectionCallback(const NewConnectCallback &cb);
+  void set_new_connection_callback(const NewConnectCallback &cb);
 };
+}  // namespace net
 #endif
