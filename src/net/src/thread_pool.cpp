@@ -2,8 +2,8 @@
 #include <thread_pool.h>
 #include <iostream>
 #include <string>
-
-ThreadPool::ThreadPool(int thread_num) : thread_num_(thread_num), stop(false) {}
+using namespace net;
+ThreadPool::ThreadPool(int thread_num) : thread_num_(thread_num), stop_(false) {}
 
 void ThreadPool::Start() {
   for (int i = 0; i < thread_num_; i++) {
@@ -20,8 +20,8 @@ void ThreadPool::Start() {
         Task task;
         {
           std::unique_lock<std::mutex> lock(tasks_mtx_);
-          cv_.wait(lock, [this]() { return stop | !tasks_.empty(); });
-          if (stop && tasks_.empty()) return;
+          cv_.wait(lock, [this]() { return stop_ | !tasks_.empty(); });
+          if (stop_ && tasks_.empty()) return;
           task = tasks_.front();
           tasks_.pop();
         }
@@ -34,7 +34,7 @@ void ThreadPool::Start() {
 ThreadPool::~ThreadPool() {
   {
     std::unique_lock<std::mutex> lock(tasks_mtx_);
-    stop = true;
+    stop_ = true;
   }
   cv_.notify_all();
   for (std::thread &th : threads_) {
@@ -42,14 +42,3 @@ ThreadPool::~ThreadPool() {
   }
 }
 
-void ThreadPool::Run(Task task) {
-  {
-    std::unique_lock<std::mutex> lock(tasks_mtx_);
-    if (stop) {
-      std::cout << "thread pool has stop.Don't Run any task" << std::endl;
-      return;
-    }
-    tasks_.emplace(task);
-  }
-  cv_.notify_one();
-}

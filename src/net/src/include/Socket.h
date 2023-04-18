@@ -15,7 +15,7 @@ class Socket : noncopyable {
   void set_reuser_addr(int fd);
   void set_nonblocking(int fd);
   void Bind(int fd, const InetAddress &inetaddress);
-  void connect(const InetAddress &inetaddress);
+  void connect(int fd,const InetAddress &inetaddress);
   void Listen(int fd, int num = 10);
   int Accept(int fd /*,InetAddress & clientaddr*/);
 

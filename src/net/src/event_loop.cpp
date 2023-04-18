@@ -5,16 +5,13 @@ using namespace net;
 const int thread_num = 8;
 EventLoop::EventLoop() : quit_(false) {
   epoll_ = new Epoll();
-  threads_ = new ThreadPool(thread_num);
-  threads_->Start();
 }
 
 EventLoop::~EventLoop() {
   delete epoll_;
-  delete threads_;
 }
 
-void EventLoop::loop() {
+void EventLoop::Loop() {
   while (!quit_) {
     std::vector<Channel *> chs;
     chs = epoll_->CreateWait();
@@ -25,4 +22,3 @@ void EventLoop::loop() {
 }
 
 void EventLoop::UpdateChannel(Channel *channel) { epoll_->Update(channel); }
-void EventLoop::AddThreadPool(Task task) { threads_->Run(task); }

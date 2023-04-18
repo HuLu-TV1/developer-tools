@@ -11,15 +11,13 @@ class Channel;
 class EventLoop : noncopyable {
  public:
   EventLoop();
-  void loop();
+  void Loop();
   ~EventLoop();
   void UpdateChannel(Channel *channel);
   void AddThreadPool(Task task);
 
  private:
   Epoll *epoll_;
-  //  std::unique_ptr<ThreadPool>threads_;
-  ThreadPool *threads_;
   bool quit_;
 };
 }  // namespace net

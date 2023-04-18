@@ -16,7 +16,7 @@
 /// |                   |                  |                  |
 /// 0      <=      readerIndex   <=   writerIndex    <=     size
 /// @endcode
-
+namespace net {
 class Buffer : noncopyable {
  public:
   static const size_t kCheapPrepend;
@@ -82,5 +82,6 @@ class Buffer : noncopyable {
   size_t read_index_;
   size_t write_index_;
 };
+}  // namespace net
 
 #endif
