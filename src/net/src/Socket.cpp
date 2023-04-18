@@ -42,10 +42,8 @@ int Socket::Accept(int fd /*,InetAddress & clientaddr*/) {
   return clnt_fd;
 }
 
-// void Socket::connect(const InetAddress &inetaddress){
-//     struct sockaddr_in addr = inetaddress.getAddr();
-//     socklen_t addr_len = inetaddress.getAddr_len();
-//     if (::connect(fd, (sockaddr*)&addr, addr_len) == -1) {
-//     printf("socket connect error: %s(errno: %d)\n", strerror(errno), errno);
-//   }
-// }
+void Socket::connect(int fd, const InetAddress &inetaddress) {
+  if (::connect(fd, inetaddress.get_sock_addr(), inetaddress.get_addr_len()) == -1) {
+    printf("socket connect error: %s(errno: %d)\n", strerror(errno), errno);
+  }
+}

@@ -2,6 +2,7 @@
 #define __ACCEPTOR__
 #include <functional>
 #include "noncopyable.h"
+#include <memory>
 namespace net {
 class Socket;
 class EventLoop;
@@ -12,15 +13,16 @@ class Acceptor : noncopyable {
   EventLoop *eventloop_;
   using NewConnectCallback = std::function<void(Socket *)>;
   NewConnectCallback new_connect_callback_;
-  Socket *socket_;
-  Channel *accept_channel_;
+  std::unique_ptr<Socket> socket_;
+  std::unique_ptr<Socket> clnt_sock;
+  std::unique_ptr<Channel> accept_channel_;
   int socket_fd_;
   void AcceptConnection();
 
  public:
   Acceptor(EventLoop *event_loop, const InetAddress &listen_addr);
   ~Acceptor();
-  void set_new_connection_callback(const NewConnectCallback &cb);
+  void set_new_connection_callback(const NewConnectCallback &cb) {new_connect_callback_ = std::move(cb);};
 };
 }  // namespace net
 #endif

@@ -15,7 +15,7 @@ Epoll::Epoll() : events_(kInitEventListSize) {
 }
 
 Epoll::~Epoll() {
-  std::cout << "Epoll" << std::endl;
+  std::cout << "~Epoll" << std::endl;
   close(epfd_);
 }
 
@@ -33,15 +33,23 @@ void Epoll::Update(Channel *channel) {
     }
     channel->set_in_epoll();
   } else {
+    if(channel->IsNoneEvent()) {
+      if (epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, &ev) == -1) {
+      printf("epoll_ctl error: %s(errno: %d)\n", strerror(errno), errno);
+      }
+    }
+    else{
     if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fd, &ev) == -1) {
       printf("epoll_ctl error: %s(errno: %d)\n", strerror(errno), errno);
     }
-  }
+    }
+}
 }
 
 std::vector<Channel *> Epoll::CreateWait(int timeout) {
   ChannelVec vec_channel;
-  int nfds = epoll_wait(epfd_, &*events_.begin(), static_cast<int>(events_.size()), timeout);
+  //int nfds = epoll_wait(epfd_, &*events_.begin(), static_cast<int>(events_.size()), timeout); //∂ºø…“‘
+   int nfds = epoll_wait(epfd_, events_.data(), static_cast<int>(events_.size()), timeout);
   std::cout << "nfds " << nfds << std::endl;
   FillActiveChannels(nfds, vec_channel);
   std::cout << " createWait vec_channel.size()" << vec_channel.size() << std::endl;
@@ -50,6 +58,7 @@ std::vector<Channel *> Epoll::CreateWait(int timeout) {
   // }
   return vec_channel;
 }
+
 void Epoll::FillActiveChannels(int nfds, ChannelVec &vec_channel) {
   for (int i = 0; i < nfds; i++) {
     Channel *tem_channel = static_cast<Channel *>(events_[i].data.ptr);

@@ -2,7 +2,7 @@
 #include <sys/uio.h>
 
 #include <errno.h>
-
+using namespace net;
 const size_t Buffer::kCheapPrepend = 8;
 const size_t Buffer::KInitiaSize = 1024;
 size_t Buffer::ReadFd(int fd, int *SavedErrno) {
