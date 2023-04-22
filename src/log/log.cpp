@@ -132,7 +132,7 @@ void Logger::WriteLog(const char* file_name, const char* callback_name, int line
         int n = snprintf(buf_, 300, "%s %s [%s:%s:%d] ", current_time.c_str(), KLogLevelName[level],
                     file_name, callback_name, line_no);
         int m = vsnprintf(buf_+n, buf_size_-1, format, valist);
-        // buf_[n+m] = '\n';
+        buf_[n+m] = '\n';
         buf_[n+m+1] = '\0';
         log_str = buf_;
     }
