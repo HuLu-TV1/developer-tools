@@ -1,4 +1,5 @@
 message( "BOOSTTEST_LIBRARY: ${BOOSTTEST_LIBRARY}")
+include_directories(../src/include)
 add_executable(server_unittest server_unittest.cpp)
 target_link_libraries(server_unittest net_demo )
 #################
