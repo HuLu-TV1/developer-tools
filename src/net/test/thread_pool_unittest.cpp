@@ -3,6 +3,7 @@
 #include <sys/prctl.h>
 #include <functional>
 #include <chrono>
+using namespace net;
 void Print() {
     char thread_name[256];
     pthread_getname_np(pthread_self(), thread_name, sizeof(thread_name));

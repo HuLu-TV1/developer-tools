@@ -1,26 +1,24 @@
 #ifndef __EVENTLOOP_
 #define __EVENTLOOP_
-#include <functional>
-#include <memory>
 #include "noncopyable.h"
 #include "thread_pool.h"
+#include <functional>
+#include <memory>
 namespace net {
 class Epoll;
 class Channel;
 
 class EventLoop : noncopyable {
- public:
+public:
   EventLoop();
-  void loop();
+  void Loop();
   ~EventLoop();
   void UpdateChannel(Channel *channel);
   void AddThreadPool(Task task);
 
- private:
+private:
   Epoll *epoll_;
-  //  std::unique_ptr<ThreadPool>threads_;
-  ThreadPool *threads_;
   bool quit_;
 };
-}  // namespace net
+} // namespace net
 #endif

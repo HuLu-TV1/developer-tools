@@ -1,12 +1,12 @@
 #ifndef _SOCK__
 #define _SOCK__
-#include <sys/socket.h>
 #include "noncopyable.h"
+#include <sys/socket.h>
 
 namespace net {
 class InetAddress;
 class Socket : noncopyable {
- public:
+public:
   Socket(int fd);
   Socket();
   ~Socket();
@@ -15,13 +15,14 @@ class Socket : noncopyable {
   void set_reuser_addr(int fd);
   void set_nonblocking(int fd);
   void Bind(int fd, const InetAddress &inetaddress);
-  void connect(const InetAddress &inetaddress);
+  void connect(int fd, const InetAddress &inetaddress);
   void Listen(int fd, int num = 10);
+  void shutdownWrite();
   int Accept(int fd /*,InetAddress & clientaddr*/);
 
- private:
+private:
   int socket_fd;
 };
-}  // namespace net
+} // namespace net
 
 #endif

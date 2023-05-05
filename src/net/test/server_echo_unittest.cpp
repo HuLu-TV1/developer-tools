@@ -2,7 +2,8 @@
 #include "inet_address.h"
 #include "tcp_server.h"
 #include <string>
-#include <iostream>
+#include<iostream>
+#include "log.h"
 using namespace net;
 class EchoServer{
     public:
@@ -16,7 +17,7 @@ class EchoServer{
     private:
         void OnMessage( Connection *connc, Buffer *readbuf) {
         std::string str(readbuf->RetrieveAllAsString());
-        std::cout<<str<<std::endl;
+        LOG_DEBUG("receive str = %s",str.c_str());
         connc->send(str);
     }
     void onConnect( Connection *connc) {
@@ -27,6 +28,7 @@ class EchoServer{
     Server server_;
 };
 int main() {
+    CommonLog::Logger::GetInstance()->Init(CommonLog::LogType::LOG_PRINT, 0);
   InetAddress serv_addr(8888, "127.0.0.1");
   EventLoop event_loop;
   EchoServer echo_server(&event_loop, serv_addr);

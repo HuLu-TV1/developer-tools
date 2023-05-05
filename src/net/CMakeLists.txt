@@ -1,17 +1,19 @@
 cmake_minimum_required(VERSION 3.10)
 project(cmake_test VERSION 1.0.0 LANGUAGES C CXX)
 
-file (GLOB_RECURSE SRC_DIR_LIST "src/*.cpp")
-# message( "SRC_DIR_LIST: ${SRC_DIR_LIST}")
-include_directories(src/include)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -g -Wextra -std=c++17  -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -g -Wextra -std=c++17  -Wno-unused-parameter -pthread")
 
-#需要在根目录下添加，表示开启项目的测试功能
-enable_testing()
-find_library(BOOSTTEST_LIBRARY NAMES boost_unit_test_framework)
+#设置输出路径
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+
+# #需要在根目录下添加，表示开启项目的测试功能
+# enable_testing()
+# find_library(BOOSTTEST_LIBRARY NAMES boost_unit_test_framework)
 
 set(PINE_BUILD_SUPPORT_DIR "${CMAKE_SOURCE_DIR}/build_support")
-set(PINE_CLANG_SEARCH_PATH "/home/E0002558/bin" "" "/usr/local/bin" "/usr/bin" "/usr/local/opt/llvm/bin" "/usr/local/opt/llvm@8/bin" "/usr/local/Cellar/llvm/8.0.1/bin")
+set(PINE_CLANG_SEARCH_PATH  "${CMAKE_SOURCE_DIR}/thirdfile/bin")
 # clang-format
 if (NOT DEFINED CLANG_FORMAT_BIN)
     # attempt to find the binary if user did not specify
@@ -59,7 +61,7 @@ endif ()
 string(CONCAT PINE_FORMAT_DIRS
         "${CMAKE_CURRENT_SOURCE_DIR}/src,"
         )
-message( "PINE_FORMAT_DIRS: ${PINE_FORMAT_DIRS}")
+
 # runs clang format and updates files in place.
 add_custom_target(format ${PINE_BUILD_SUPPORT_DIR}/run_clang_format.py
         ${CLANG_FORMAT_BIN}
@@ -111,7 +113,13 @@ add_custom_target(clang-tidy
         )
 # add_dependencies(check-clang-tidy pine_shared)                    # needs gtest headers, compile_commands.json
 
-# add_executable(NET_TEST ${SRC_DIR_LIST})
-add_library(net_demo ${SRC_DIR_LIST})
+
+message( "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+add_custom_target(clean-all
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}
+    COMMENT "Removing all generated files.")
+
+
 add_subdirectory(test)
+add_subdirectory(src)
 

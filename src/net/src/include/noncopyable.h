@@ -2,13 +2,13 @@
 #define _BASE_NONCOPYABLE_H
 
 class noncopyable {
- public:
+public:
   noncopyable(const noncopyable &) = delete;
   void operator=(const noncopyable &) = delete;
 
- protected:
+protected:
   noncopyable() = default;
   ~noncopyable() = default;
 };
 
-#endif  // MUDUO_BASE_NONCOPYABLE_H
+#endif // MUDUO_BASE_NONCOPYABLE_H

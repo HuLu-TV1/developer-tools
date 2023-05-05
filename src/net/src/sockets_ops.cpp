@@ -1,7 +1,8 @@
 #include "sockets_ops.h"
 #include <errno.h>
 const struct sockaddr *sockaddr_cast(const struct sockaddr_in *addr) {
-  return static_cast<const struct sockaddr *>(implicit_cast<const void *>(addr));
+  return static_cast<const struct sockaddr *>(
+      implicit_cast<const void *>(addr));
 }
 
 int get_socket_error(int sockfd) {
