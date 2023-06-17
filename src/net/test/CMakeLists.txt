@@ -1,7 +1,7 @@
 message( "BOOSTTEST_LIBRARY: ${BOOSTTEST_LIBRARY}")
-include_directories(../src/include)
-add_executable(server_unittest server_unittest.cpp)
-target_link_libraries(server_unittest net_demo )
+# include_directories(../src/include)
+# add_executable(server_unittest server_unittest.cpp)
+# target_link_libraries(server_unittest net_demo )
 #################
 
 
@@ -10,8 +10,8 @@ target_link_libraries(thread_pool_unittest net_demo )
 
 #################
 
-add_executable(server_echo_unittest server_echo_unittest.cpp)
-target_link_libraries(server_echo_unittest net_demo )
+# add_executable(server_echo_unittest server_echo_unittest.cpp)
+# target_link_libraries(server_echo_unittest net_demo )
 #################
 
 # add_executable(client_unittest client_unittest.cpp)

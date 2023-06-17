@@ -113,6 +113,13 @@ add_custom_target(clang-tidy
         )
 # add_dependencies(check-clang-tidy pine_shared)                    # needs gtest headers, compile_commands.json
 
+# build the liblog.so
+set(LOGDIR ${CMAKE_SOURCE_DIR}/../log)
+set(INC ${LOGDIR}/log.h ${LOGDIR}/log_queue.h)
+set(SRC ${LOGDIR}/log.cpp)
+add_library(log SHARED ${SRC} ${INC})
+target_link_libraries(log pthread)
+
 add_subdirectory(test)
 add_subdirectory(src)
 
