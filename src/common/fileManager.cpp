@@ -535,3 +535,28 @@ uint64_t FileManager::getFileSize(const std::string &path)
     }
     return (uint64_t)buf.st_size;
 }
+
+void FileManager::getHomePath(char* path)
+{
+    if (path == nullptr) return;
+    char home[PATH_MAX]{0};
+    char* user_home = getenv("HOME");
+    if (user_home) {
+        snprintf(home, PATH_MAX, "%s/.ot", user_home);
+    }
+    if (!realpath(home, path)) {
+        snprintf(path, PATH_MAX, "%s", home);
+    }
+    if (!isDirExist(std::string(path))) {
+        createDir(std::string(path));
+    }
+}
+
+std::string FileManager::getTempPath()
+{
+    char path[PATH_MAX]{0};
+    getHomePath(path);
+    strcat(path, "/data");
+    return std::string(path);
+}
+

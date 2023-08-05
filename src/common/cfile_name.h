@@ -1,16 +1,18 @@
 #pragma once
+#include "common.h"
 #include <string>
 #include <cstring>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+
 const int PATH_MAX = 4096;
 
 using CFileNameStr = CFileName<char>;
 
 template<typename T>
-class CFileName {
+class [[deprecated("This template class is deprecated.")]] CFileName {
 public:
     using base_type = std::basic_string<T>;
     using value_type = T;
@@ -87,7 +89,7 @@ public:
         if (user_home) {
             snprintf(home, PATH_MAX, "%s/.ot", user_home);
         }
-        if (realpath(home, path)) {
+        if (!realpath(home, path)) {
             snprintf(path, PATH_MAX, "%s", home);
         }
         if (!FoldExists(path)) {

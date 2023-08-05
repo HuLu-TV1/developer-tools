@@ -220,5 +220,10 @@ class FileManager
     static bool isFile(const std::string &url);
 
     static uint64_t getFileSize(const std::string &path);
+
+    static std::string getTempPath();
+
+  private:
+    static void getHomePath(char* path);
 };
 #endif  // __FILE_MANAGER_H__
