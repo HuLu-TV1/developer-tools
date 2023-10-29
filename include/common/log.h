@@ -6,6 +6,7 @@
 #include <atomic>
 #include <cstdarg>
 #include <cstring>
+#include <sstream>
 #include "log_queue.h"
 
 namespace CommonLog {
@@ -21,6 +22,30 @@ enum LogLevel {
     LOG_INFO,
     LOG_DEBUG,
     LOG_NUM,
+};
+
+enum LoggingDestinationOption {
+    LOG_TO_NONE = 0,
+    LOG_TO_FILE = 1 << 0,
+    LOG_TO_FILE_RESET = 1 << 1,
+    LOG_TO_SYSTEM_LOG = 1 << 2,
+    LOG_DEFAULT = LOG_TO_SYSTEM_LOG,
+};
+
+inline LogLevel GetMaxLogLevel() {
+    return LOG_NUM;
+} 
+
+void InitLogSetting(LoggingDestinationOption destination);
+
+typedef int LogSeverity;
+
+class LogMessageVoidify {
+    public:
+        LogMessageVoidify() { }
+        // This has to be an operator with a precedence lower than << but
+        // higher than ?:
+        void operator&(std::ostream&) { }
 };
 
 class Logger {
@@ -68,6 +93,26 @@ private:
     std::thread *async_thread_;
 };
 
+class LogMessage {
+public:
+    // Used for LOG(severity).
+    LogMessage(const char* file, int line, LogSeverity severity);
+    LogMessage(const LogMessage& ) = delete;
+    LogMessage& operator=(const LogMessage&) = delete;
+
+    ~LogMessage();
+
+    void InitLog();
+
+    std::ostream& stream() { return stream_; }
+
+private:
+    std::ostringstream stream_;
+    LogSeverity severity_;
+    std::mutex file_mutex_;
+    const char* file_;
+    const int line_;
+};
 
 }
 
@@ -115,3 +160,17 @@ private:
             CommonLog::Logger::GetInstance()->Flush();                    \
         }                                                                       \
     } while(0)
+
+#define COMPACT_OPENTE_LOG_EXT(severity, ClassName, ...) \
+    ::CommonLog::ClassName(__FILE__, __LINE__, \
+    ::CommonLog::LOG_##severity, ##__VA_ARGS__)
+#define COMPACT_OPENTE_LOG(severity) COMPACT_OPENTE_LOG_EXT(severity, LogMessage)
+#define LOG_STREAM(severity) COMPACT_OPENTE_LOG(severity).stream()
+
+#define LAZY_STREAM(stream, condition)                                  \
+    !(condition) ? (void) 0 : ::CommonLog::LogMessageVoidify() & (stream)
+
+#define LOG_IS_ON(severity) \
+    ((::CommonLog::LogLevel::LOG_ ## severity) <= ::CommonLog::GetMaxLogLevel())
+
+#define CLOG(severity,msg)	LAZY_STREAM(LOG_STREAM(severity), LOG_IS_ON(severity)) << msg << " "

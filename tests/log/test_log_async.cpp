@@ -14,11 +14,13 @@ void log_async_test() {
     for(int i=0; i<KItemNum; i++)
     {
         LOG_INFO("[tid:%lld] log async test: %d\n", tid, i);
+        CLOG(INFO, "stream log async test " << i);
     }
 }
 
 int main() {
     CommonLog::Logger::GetInstance()->Init(CommonLog::LogType::LOG_FILE, 1);
+    CommonLog::InitLogSetting(CommonLog::LOG_TO_FILE);
     std::vector<std::thread> threads;
     printf("sync log test started\n");
     printf("start to log\n");

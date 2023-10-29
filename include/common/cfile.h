@@ -14,7 +14,7 @@ public:
     void Flush();
     void Sync();
     void Close();
-    void Write(void* buf);
+    void Write(void* data, size_t len);
     size_t Size() const;
     const std::string& Filename() const;
 

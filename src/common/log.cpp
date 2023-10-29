@@ -1,4 +1,6 @@
 #include <sys/stat.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 #include <ctime>
 #include <chrono>
 #include <iomanip>
@@ -6,8 +8,7 @@
 #include "log.h"
 
 using namespace CommonLog;
-
-const int PATH_MAX = 255;
+const int kPathMax = 255;
 
 const char *KLogLevelName[LogLevel::LOG_NUM] = {
     "[ERROR]",
@@ -16,12 +17,25 @@ const char *KLogLevelName[LogLevel::LOG_NUM] = {
     "[DEBUG]",
 };
 
+LoggingDestinationOption KLoggingDestination = LOG_DEFAULT;
+std::string KLogFileName;
+FILE* KLogFile;
+
+void CommonLog::InitLogSetting(LoggingDestinationOption destination) {
+    KLoggingDestination = destination;
+    if (destination & LOG_TO_FILE_RESET) {
+        if (!KLogFile) return;
+        fclose(KLogFile);
+        KLogFileName = "";
+    }
+}
+
 std::string GetLogPath() {
-    char path[PATH_MAX]{0};
+    char path[kPathMax]{0};
     struct stat s;
     char *user_home = getenv("HOME");
     if (user_home != nullptr) {
-        snprintf(path, PATH_MAX, "%s/.dlog", user_home);
+        snprintf(path, kPathMax, "%s/.dlog", user_home);
     }
     if (stat(path, &s) == -1 || (s.st_mode & S_IFMT) != S_IFDIR) {
         mkdir(path, S_IRWXU);
@@ -149,4 +163,39 @@ void Logger::WriteLog(const char* file_name, const char* callback_name, int line
 void Logger::Flush() {
     std::lock_guard<std::mutex> lock(mutex_);
     fflush(fp_);
+}
+
+LogMessage::LogMessage(const char* file, int line, LogSeverity severity): severity_(severity), file_(file), line_(line) {
+    InitLog();
+}
+
+void LogMessage::InitLog() {
+    stream_ << '[' << getpid() << ':' << syscall(__NR_gettid) <<']';
+    stream_ << GetCurrentTime();
+    if (severity_ >= 0 && severity_ < LOG_NUM)
+        stream_ << KLogLevelName[severity_];
+    stream_ << file_  << "(" << line_ << ") ";
+}
+
+LogMessage::~LogMessage() {
+    stream_ << std::endl;
+    std::string new_line = stream_.str();
+    if (KLoggingDestination & LOG_TO_SYSTEM_LOG) {
+        KLogFile = stdout;
+        fwrite(new_line.data(), new_line.size(), 1, KLogFile);
+        fflush(KLogFile);
+    }
+    else if (KLoggingDestination & LOG_TO_FILE) {
+        if (KLogFileName.empty() || (KLoggingDestination & LOG_TO_FILE_RESET)) {
+            KLogFileName = GetLogName();
+            KLogFile = fopen(KLogFileName.c_str(), "a");
+            if (KLogFile == NULL) {
+                fprintf(stderr, "Fail to fopen %s", KLogFileName.c_str());
+                return;
+            }
+        }
+        std::lock_guard<std::mutex> lock(file_mutex_);
+        fwrite(new_line.data(), new_line.size(), 1, KLogFile);
+        fflush(KLogFile);
+    }
 }

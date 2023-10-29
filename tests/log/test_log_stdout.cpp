@@ -14,6 +14,7 @@ void log_stdout_test() {
     for(int i=0; i<KItemNum; i++)
     {
         LOG_INFO("[tid:%lld] log sync test: %d\n", tid, i);
+        CLOG(INFO, "stream log sync test");
     }
 }
 
